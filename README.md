@@ -1,67 +1,60 @@
-# gemma4-audio-ollama-demo
+# Gemma Voice Loop Demo
 
-Minimal PowerShell demo for generating a WAV question with VOICEVOX and sending that audio to `gemma4:e2b` through the Ollama generate API.
+Local demo app for this loop:
 
-## What it does
+1. Text input
+2. VOICEVOX generates question audio
+3. Gemma 4 E2B listens to that WAV and answers
+4. VOICEVOX reads the answer aloud
 
-1. `generate_voicevox_question.ps1` calls a local VOICEVOX engine and writes:
-   - `artifacts/question.wav`
-   - `artifacts/question_query.json`
-2. `send_wav_to_ollama_gemma4.ps1` base64-encodes the WAV file and sends it to Ollama with either:
-   - `-Task transcribe`
-   - `-Task answer`
+## Structure
 
-The script stores response JSON and plain-text output under `artifacts/`.
+- `backend/`: FastAPI app managed by `uv`
+- `frontend/`: Vite + React + TypeScript + Tailwind + shadcn-style UI
+- Existing PowerShell helper scripts remain in the repo root for direct local experiments
 
 ## Requirements
 
-- Windows PowerShell 5.1+ or PowerShell 7+
-- A running VOICEVOX engine at `http://127.0.0.1:50021`
-- A running Ollama server at `http://127.0.0.1:11434`
-- The `gemma4:e2b` model pulled locally
+- VOICEVOX API running on `http://127.0.0.1:50021`
+- Ollama running on `http://127.0.0.1:11434`
+- `gemma4:e2b` pulled locally
+- Node.js and `uv`
+
+## Run
+
+Backend:
 
 ```powershell
-ollama pull gemma4:e2b
+uv run --directory backend uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-## Quick start
-
-Generate a spoken question:
+Frontend:
 
 ```powershell
-.\generate_voicevox_question.ps1
+cd frontend
+npm run dev
 ```
 
-Transcribe the generated audio:
+Open the Vite URL shown in the terminal, usually `http://127.0.0.1:5173`.
 
-```powershell
-.\send_wav_to_ollama_gemma4.ps1 -Task transcribe
+## API
+
+- `GET /api/health`
+- `GET /api/speakers`
+- `POST /api/chain`
+
+Example request body:
+
+```json
+{
+  "text": "What is your favorite color?",
+  "question_speaker": 2,
+  "answer_speaker": 2
+}
 ```
-
-Answer the spoken question:
-
-```powershell
-.\send_wav_to_ollama_gemma4.ps1 -Task answer
-```
-
-## Output files
-
-Running the scripts creates these files under `artifacts/`:
-
-- `question.wav`
-- `question_query.json`
-- `gemma4_e2b_audio_transcript_response.json`
-- `gemma4_e2b_audio_transcript.txt`
-- `gemma4_e2b_audio_answer_response.json`
-- `gemma4_e2b_audio_answer.txt`
 
 ## Notes
 
-- The default output paths are relative to the script directory, so the repo is portable across machines.
-- Ollama's `/api/generate` payload uses the `images` field for multimodal binary inputs; this demo places the base64-encoded WAV bytes there.
-- Generated files are ignored by Git.
-- Exact transcript and answer text can vary with the synthesized voice and current model behavior.
-
-## License
-
-MIT
+- The frontend proxies `/api` to the backend during development.
+- The backend currently sends the generated WAV to Gemma through Ollama `images` with base64 audio, matching the local experiment path that worked in this workspace.
+- Audio is returned to the frontend as data URLs for a simple first version.
