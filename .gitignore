@@ -1,0 +1,16 @@
+/artifacts/
+/backend/
+/frontend/
+
+# Legacy generated files from earlier local runs
+/question.wav
+/question_query.json
+/gemma4_e2b_audio_answer.txt
+/gemma4_e2b_audio_answer_response.json
+/gemma4_e2b_audio_response.json
+/gemma4_e2b_audio_transcript.txt
+/gemma4_e2b_audio_transcript_response.json
+
+# Local environment noise
+/.DS_Store
+/Thumbs.db
